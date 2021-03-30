@@ -34,7 +34,7 @@ getAngle<-function(j,i,k)
 
 #wymiary
 N=500
-M=250
+M=250 
 #gestosci
 rho1<-3500
 rho2<-5500
