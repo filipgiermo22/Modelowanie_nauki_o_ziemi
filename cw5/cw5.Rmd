@@ -1,0 +1,111 @@
+---
+title: "Lab5"
+output: html_notebook
+---
+
+
+
+```{r}
+# parametry modelu
+nz <- 500
+nx <- 500
+fpeak <- 30.0
+dt <- 0.002
+et <- 0.5
+ds <- 1.0
+# polożenie zrodla
+xs <- nx / 2.0
+zs <- 25
+# ilosc krokow czasowych dla sejsmogramu
+nt <- et / dt + 1
+
+# model
+V <- matrix(nrow = nz, ncol = nx, 2000)
+for (i in 1:nz / 2) {
+  for (j in 1 : nx) {
+    V[i, j] <- 1000
+  }  
+}
+
+# macierze dla pól cisnień w czasie t+1, t oraz t-1
+p <- matrix(nrow = nz, ncol = nx, 0)
+pm <- matrix(nrow = nz, ncol = nx, 0)
+pp <- matrix(nrow = nz, ncol = nx, 0)
+
+# TODO: trzeba znalezc Vmax do warunku stabilnoci
+vmax <- 2000
+
+# dtr - realny krok próbkowania który jest dzielnikiem dt
+dtr <- ds / (2.0 * vmax)
+w2 <- 0
+while (1) {
+  w2 <- w2 + 1
+  w1 <- dt / w2
+  if (w1 <= dtr) {
+    dtr <- w1
+    break
+  }
+}
+
+# pasek postepu
+niter = et / dtr + 1
+prog_bar <- txtProgressBar(min = 0, max = niter, style = 3)
+
+kk <- 1   # ilosc dtr na jedna dt
+kkk <- 0  # ilosc dt
+k <- 1    #ilosc dtr
+
+##########################################################################
+
+while (1) {
+  k <- k + 1
+  kk <- kk + 1
+  t <- k * dtr
+  # pasek postepu
+  setTxtProgressBar(prog_bar, k)
+  
+  # petla glowna modelowania
+  for (i in 2:(nz -1)) {
+    for (j in 2:(nx - 1)) {
+      pp[i, j] = 2.0 * p[i, j] - pm[i, j] + ((ds * ds) / (ds * ds) * V[i, j] * V[i, j]) *
+        (p[i + 1, j] + p[i - 1, j] + p[i, j + 1] + p[i, j - 1] - 4.0 * p[i, j])
+    }
+  }
+  
+  # zrodlo Rickera
+  pp[zs, xs] <- pp[zs, xs] + exp(-(((pi * fpeak * (t - (1.0 / fpeak))) * (pi * fpeak * (t - (1.0 / fpeak)))))) *
+    (1.0 - 2.0 * ((pi * fpeak * (t - (1.0 / fpeak))) * (pi * fpeak * (t - (1.0 / fpeak)))))
+  
+  # transparent lewa - warunek brzegowy dla krawedzi lewej
+  for (i in 1:nz) {
+    pp[i, 1] = p[i, 1] + p[i, 2] - pm[i, 2] +
+      V[i, 1] * (dtr / ds) * (p[i, 2] - p[i, 1] - (pm[i, 3] - pm[i, 2]))
+  }
+
+  # TODO: transparent prawa
+  # TODO: transparent gora
+  # TODO: transparent dol
+
+  # przejscie o krok do przodu
+  pm <- p
+  p <- pp
+  
+  # warunek do zapisania probki sejsmogram - taki sam zrobic dla animacji!
+  if (kk * dtr + dtr / 10.0 >= dt) {
+    kk <- 0
+    kkk <- kkk + 1
+    
+    # TODO: dodanie probek do sejsmogramu
+    
+    # przerwanie po czasie
+    if (kkk * dt > et)
+      break
+  }
+  
+} # MAIN WHILE LOOP
+
+# wyrysowanie pola
+image(t(apply(p, 2, rev)))
+text(0.2, 0.9, kkk * dt)
+
+```
