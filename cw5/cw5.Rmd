@@ -85,6 +85,7 @@ saveGIF({
     for (i in 1:nz) {
         pp[i, 1] = p[i, 1] + p[i, 2] - pm[i, 2] +
         V[i, 1] * (dtr / ds) * (p[i, 2] - p[i, 1] - (pm[i, 3] - pm[i, 2]))
+<<<<<<< HEAD
     }
 
     # TODO: transparent prawa
@@ -104,6 +105,27 @@ saveGIF({
         V[nz, j] * (dtr / ds) * (p[nz-1, j] - p[nz, j] - (pm[nz-2, j] - pm[nz-1, j]))
     }
 
+=======
+    }
+
+    # TODO: transparent prawa
+        for (i in 1:nz) {
+        pp[i, nz] = p[i, nz] + p[i, nz-1] - pm[i, nz-1] +
+        V[i, nz] * (dtr / ds) * (p[i, nz-1] - p[i, nz] - (pm[i, nz-2] - pm[i, nz-1]))
+    }
+    
+    # TODO: transparent góra
+        for (j in 1:nz) {
+        pp[1, j] = p[1, j] + p[2, j] - pm[2, j] +
+        V[1, j] * (dtr / ds) * (p[2, j] - p[1, j] - (pm[3, j] - pm[2, j]))
+    }
+    # TODO: transparent dół
+        for (j in 1:nz) {
+        pp[nz, j] = p[nz, j] + p[nz-1, j] - pm[nz-1, j] +
+        V[nz, j] * (dtr / ds) * (p[nz-1, j] - p[nz, j] - (pm[nz-2, j] - pm[nz-1, j]))
+    }
+
+>>>>>>> 5f92f0411953bd4e233d55056682c7a6ae5b672e
     ######################################################################################
     
     # przejście o krok do przodu
@@ -117,6 +139,7 @@ saveGIF({
         
 
         
+<<<<<<< HEAD
     # zapisywanie wartości z górnej krawędzi modelu do sejsmogramu
     for(z in 1:nx){
       seis[x, z] <- pp[1, z]
@@ -139,7 +162,51 @@ saveGIF({
 
 # wyrysowanie sejsmogramu
 image(t(apply(seis, 2, rev)))
+=======
+        # zapisywanie wartości z górnej krawędzi modelu do sejsmogramu
+#         for(z in 1:nx){
+#            seis[x, z] <- pp[1, z]
+#        }
+        x = x + 1
+       image(t(apply(pp, 2, rev)))
+       text(0.2, 0.9, kkk * dt)
+
+        # TODO: napisać warunek podobny jak w 102 dla animacji
+
+            # Limg <- apply(p, 2, rev)
+            # image(t(Limg))
+            # text(0.2, 0.9, k)
+        
+        
+        # przerwanie po czasie
+        if (kkk * dt > et)
+        break
+    }
+    
+    } # KONIEC PĘTLI GŁÓWNEJ
+}, interval = 0.2, movie.name = "cw5.gif") # SAVEGIF
+
+
+
+# wyrysowanie sejsmogramu
+image(t(apply(seis, 2, rev)))
+
+# nie wiem co
+image(t(apply(p, 2, rev)))
+text(0.2, 0.9, kkk * dt)
+>>>>>>> 5f92f0411953bd4e233d55056682c7a6ae5b672e
+
 
 ```
 
 
+<<<<<<< HEAD
+=======
+
+
+
+
+
+
+
+>>>>>>> 5f92f0411953bd4e233d55056682c7a6ae5b672e
