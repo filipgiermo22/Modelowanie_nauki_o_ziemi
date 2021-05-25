@@ -1,0 +1,28 @@
+{
+    "id": "47CD5053",
+    "path": null,
+    "project_path": null,
+    "type": "object_explorer",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1621931067738.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "id": "48a485c8d14c47448fff02be070615f8",
+        "name": "minimalIceRange",
+        "title": "minimalIceRange",
+        "language": "R",
+        "source_window_id": "",
+        "Source": "Source"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 3977296616371402549,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1621931067738,
+    "read_only": false,
+    "read_only_alternatives": []
+}

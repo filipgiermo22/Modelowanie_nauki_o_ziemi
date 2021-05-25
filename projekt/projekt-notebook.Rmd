@@ -1,0 +1,180 @@
+---
+title: "Antarktyda"
+output: html_notebook
+---
+
+Wczytanie danych z plików .csv
+```{r}
+daily_ice_edge <- read.csv(file = 'daily_ice_edge/daily_ice_edge.csv')
+daily_open_water <- read.csv(file = 'daily_ice_edge/daily_open_water.csv')
+```
+
+
+Test rysowania wykresów
+```{r}
+
+library(plotly)
+
+row <- daily_ice_edge[8764,]
+# delete date
+row <- subset(row, select=-Date)
+# delete -
+row <- abs(row)
+
+row <- as.numeric(row)
+
+
+fig <- plot_ly(
+  type = 'scatterpolar',
+  r = row,
+  theta = c(0:360),
+  mode = 'markers'
+)
+fig
+orca(fig, "nic.png")
+
+```
+
+
+Rysowanie wykresów zasięgu pokrywy lodowej dla kolejnych wierszy (dat)
+```{r}
+# biblioteka do wykresów
+library(plotly)
+# przygotowwanie danych do stworzenia wykresów
+daily_ice_edge_df <- as.data.frame(daily_ice_edge)
+daily_ice_edge_df <- subset(daily_ice_edge_df , select=-Date)
+
+# wektor kątów
+ang = c(0:360)
+
+
+plotIce <- function(i) {
+  row <- daily_ice_edge_df[i,]
+  # delete -
+  row <- abs(row)
+  row <- as.numeric(row)
+  # "odwrócenie" współrzędnych
+  row = 90 -row
+  # nazwy wykresów
+  name <- paste("fig",i, sep = "_")
+  name <- paste(name, "png", sep = ".")
+  print(name)
+  # stworzenie wykresu
+  fig <- plot_ly(
+    type = 'scatterpolar',
+    mode = 'lines',
+    r = row,
+    theta = ang,
+    mode = 'markers'
+  )
+  
+  orca(fig, paste("wykresy/", name, sep=""))
+}
+
+
+
+
+for (i in c(1:10)) {
+  plotIce(i)
+}
+
+```
+
+
+
+  
+Szukanie najmniejszego zasięgu pokrywy lodowej poprzez znalezienie minimum w każdej kolumnie i stworzenie mapy z tych wartości
+```{r}
+
+minimalIceRange <- vector()
+
+daily_ice_edge_df_abs <- abs(daily_ice_edge_df)
+
+for (colNum in 1:ncol(daily_ice_edge_df)) {
+
+  # print(
+  #   abs(min(daily_ice_edge_df[,colNum]))
+  # )
+  
+  minimalIceRange[colNum] <- max(daily_ice_edge_df_abs[,colNum])
+
+}
+
+minimalIceRange <- as.numeric(minimalIceRange)
+minimalIceRange <- 90 - minimalIceRange
+ang = c(360:0)
+
+fig <- plot_ly(
+  type = 'scatterpolar',
+  mode = 'lines',
+  r = minimalIceRange,
+  theta = ang,
+  mode = 'markers'
+)
+
+orca(fig, 'wykresy/minimalIceRange.png')
+
+```
+Rysowanie pojedynczych poligonów w nieco niepoprawnje postaci - bez uwzględnienia tego, że dane to współrzedne biegunowe
+```{r}
+
+
+library(sp)
+x_coord <- c(0:360)
+y_coord <-as.numeric(abs(daily_ice_edge_df[59,]))
+xym <- cbind(x_coord, y_coord)
+
+
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+sps = SpatialPolygons(list(ps))
+plot(sps)
+# wszytskie pola danych
+sps
+# wartość pola area
+sps@polygons[[1]]@area
+
+```
+
+Próba szukania najmniejszej powierzchni poprzez obliczanie powierzchni poligonów powstałych z danych
+```{r}
+
+# teoretycznie szuka najmniejszej powierzchni
+findMinimal <- function(i) {
+  row <- as.numeric(daily_ice_edge_df[i,])
+
+  x_coord <- c(0:360)
+  y_coord <-as.numeric(row)
+  xym <- cbind(x_coord, y_coord)
+  
+  
+  p = Polygon(xym)
+  ps = Polygons(list(p),1)
+  sps = SpatialPolygons(list(ps))
+  #plot(sps)
+  #area
+  area<-sps@polygons[[1]]@area
+  
+  return(area)
+
+}
+
+minimalArea <- 9999999
+for (i in 1:100) {
+  print(i)
+
+  nextMinimalArea <- findMinimal(i)
+  print(nextMinimalArea)
+  if(nextMinimalArea < minimalArea) {
+    minimalArea <- nextMinimalArea
+  }
+  
+}
+
+print(minimalArea)
+
+
+```
+
+
+

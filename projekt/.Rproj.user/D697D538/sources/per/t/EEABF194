@@ -1,0 +1,28 @@
+{
+    "id": "EEABF194",
+    "path": null,
+    "project_path": null,
+    "type": "object_explorer",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1621934024926.0,
+    "source_on_save": false,
+    "relative_order": 10,
+    "properties": {
+        "id": "5a26c21a86e14537a3ff8d3ea5f21289",
+        "name": "sps",
+        "title": "sps",
+        "language": "R",
+        "source_window_id": "",
+        "Source": "Source"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1621930032,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1621934024926,
+    "read_only": false,
+    "read_only_alternatives": []
+}

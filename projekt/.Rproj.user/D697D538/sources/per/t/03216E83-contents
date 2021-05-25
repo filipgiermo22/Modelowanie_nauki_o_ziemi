@@ -1,0 +1,178 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+daily_ice_edge <- read.csv(file = 'daily_ice_edge/daily_ice_edge.csv')
+daily_open_water <- read.csv(file = 'daily_ice_edge/daily_open_water.csv')
+```
+
+
+```{r}
+
+library(plotly)
+
+row <- daily_ice_edge[8764,]
+# delete date
+row <- subset(row, select=-Date)
+# delete -
+row <- abs(row)
+
+row <- as.numeric(row)
+
+
+fig <- plot_ly(
+  type = 'scatterpolar',
+  r = row,
+  theta = c(0:360),
+  mode = 'markers'
+)
+fig
+orca(fig, "nic.png")
+
+```
+
+
+
+```{r}
+
+library(plotly)
+daily_ice_edge_df <- as.data.frame(daily_ice_edge)
+daily_ice_edge_df <- subset(daily_ice_edge_df , select=-Date)
+ang = c(0:360)
+
+
+plotIce <- function(i) {
+  row <- f[i,]
+# delete -
+row <- abs(row)
+
+row <- as.numeric(row)
+
+name <- paste("fig",i, sep = "_")
+name <- paste(name, "png", sep = ".")
+print(name)
+
+fig <- plot_ly(
+  type = 'scatterpolar',
+  r = row,
+  theta = ang,
+  mode = 'markers'
+)
+
+orca(fig, name)
+}
+
+
+
+plotIce(0)
+
+```
+
+
+TODO:
+
+  - znaleźć namniejszy kontur antarktydy przeszukując minima koleknych kolumn -> narysować kontur
+  
+  
+```{r}
+
+minimalIceRange <- vector()
+
+daily_ice_edge_df_abs <- abs(daily_ice_edge_df)
+
+for (colNum in 1:ncol(daily_ice_edge_df)) {
+
+  # print(
+  #   abs(min(daily_ice_edge_df[,colNum]))
+  # )
+  
+  
+  
+  minimalIceRange[colNum] <- min(daily_ice_edge_df_abs[,colNum])
+
+}
+
+#minimalIceRange <- as.data.frame(minimalIceRange)
+minimalIceRange <- as.numeric(minimalIceRange)
+
+ang = c(0:360)
+
+fig <- plot_ly(
+  type = 'scatterpolar',
+  r = minimalIceRange,
+  theta = ang,
+  mode = 'markers'
+)
+
+orca(fig, 'min_minimalIceRange.png')
+
+```
+
+```{r}
+#rysowanie pojedynczych poligonów
+
+library(sp)
+x_coord <- c(0:360)
+y_coord <-as.numeric(abs(daily_ice_edge_df[59,]))
+xym <- cbind(x_coord, y_coord)
+
+
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+sps = SpatialPolygons(list(ps))
+plot(sps)
+#area
+sps
+sps@polygons[[1]]@area
+
+```
+
+```{r}
+
+
+
+
+
+
+# teoretycznie szuka najmniejszej powierzchni
+findMinimal <- function(i) {
+  row <- as.numeric(daily_ice_edge_df[i,])
+
+  x_coord <- c(0:360)
+  y_coord <-as.numeric(row)
+  xym <- cbind(x_coord, y_coord)
+  
+  
+  p = Polygon(xym)
+  ps = Polygons(list(p),1)
+  sps = SpatialPolygons(list(ps))
+  #plot(sps)
+  #area
+  area<-sps@polygons[[1]]@area
+  
+  return(area)
+
+
+}
+
+minimalArea <- 9999999
+for (i in 1:100) {
+  print(i)
+
+  nextMinimalArea <- findMinimal(i)
+  print(nextMinimalArea)
+  if(nextMinimalArea < minimalArea) {
+    minimalArea <- nextMinimalArea
+  }
+  
+}
+
+print(minimalArea)
+
+
+```
+
+
+
