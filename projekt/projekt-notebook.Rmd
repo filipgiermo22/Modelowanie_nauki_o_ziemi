@@ -10,34 +10,51 @@ daily_open_water <- read.csv(file = 'daily_ice_edge/daily_open_water.csv')
 ```
 
 
-Test rysowania wykresów
-```{r}
-
-library(plotly)
-
-row <- daily_ice_edge[8764,]
-# delete date
-row <- subset(row, select=-Date)
-# delete -
-row <- abs(row)
-
-row <- as.numeric(row)
-
-
-fig <- plot_ly(
-  type = 'scatterpolar',
-  r = row,
-  theta = c(0:360),
-  mode = 'markers'
-)
-fig
-orca(fig, "nic.png")
-
-```
-
-
 Rysowanie wykresów zasięgu pokrywy lodowej dla kolejnych wierszy (dat)
 ```{r}
+# # biblioteka do wykresów
+# library(plotly)
+# # przygotowwanie danych do stworzenia wykresów
+# daily_ice_edge_df <- as.data.frame(daily_ice_edge)
+# daily_ice_edge_df <- subset(daily_ice_edge_df , select=-Date)
+# 
+# # wektor kątów
+# ang = c(0:360)
+# 
+# plotIce <- function(i) {
+#   row <- daily_ice_edge_df[i,]
+#   # delete -
+#   row <- abs(row)
+#   row <- as.numeric(row)
+#   # "odwrócenie" współrzędnych
+#   row = 90 -row
+#   # nazwy wykresów
+#   name <- paste("fig",i, sep = "_")
+#   name <- paste(name, "png", sep = ".")
+#   print(name)
+#   # stworzenie wykresu
+#   fig <- plot_ly(
+#     type = 'scatterpolar',
+#     mode = 'lines',
+#     r = row,
+#     theta = ang,
+#     mode = 'markers'
+#   )
+#   
+#   orca(fig, paste("wykresy/", name, sep=""))
+#   
+# }
+# 
+# 
+# plotIce(1)
+# 
+# # for (i in c(1:2)) {
+# #   plotIce(i)
+# # }
+
+#################################################################################################################################3
+
+
 # biblioteka do wykresów
 library(plotly)
 # przygotowwanie danych do stworzenia wykresów
@@ -46,17 +63,18 @@ daily_ice_edge_df <- subset(daily_ice_edge_df , select=-Date)
 
 # wektor kątów
 ang = c(0:360)
-
-
-plotIce <- function(i) {
-  row <- daily_ice_edge_df[i,]
+# WERSJA FUNKCJI UNIEZALEŻNIONA OD DANYCH - przyjmuje dowolne dane w formacie macierzy
+# dzięki czemu można jej użyć też później
+# zapisuje wyniki w odpowednich katalogach
+plotIce <- function(angle, dataSource) {
+  row <- dataSource[angle,]
   # delete -
   row <- abs(row)
   row <- as.numeric(row)
   # "odwrócenie" współrzędnych
   row = 90 -row
   # nazwy wykresów
-  name <- paste("fig",i, sep = "_")
+  name <- paste("fig",angle, sep = "_")
   name <- paste(name, "png", sep = ".")
   print(name)
   # stworzenie wykresu
@@ -67,16 +85,19 @@ plotIce <- function(i) {
     theta = ang,
     mode = 'markers'
   )
+  # get dataSource name as string
+  dirName = deparse(substitute(dataSource))
   
-  orca(fig, paste("wykresy/", name, sep=""))
+  orca(fig, paste("wykresy/", dirName, "/",name, sep=""))
+  
 }
 
 
+plotIce(1, daily_ice_edge_df)
 
-
-for (i in c(1:10)) {
-  plotIce(i)
-}
+# for (i in c(1:2)) {
+#   plotIce(i)
+# }
 
 ```
 
@@ -91,13 +112,7 @@ minimalIceRange <- vector()
 daily_ice_edge_df_abs <- abs(daily_ice_edge_df)
 
 for (colNum in 1:ncol(daily_ice_edge_df)) {
-
-  # print(
-  #   abs(min(daily_ice_edge_df[,colNum]))
-  # )
-  
   minimalIceRange[colNum] <- max(daily_ice_edge_df_abs[,colNum])
-
 }
 
 minimalIceRange <- as.numeric(minimalIceRange)
@@ -115,66 +130,57 @@ fig <- plot_ly(
 orca(fig, 'wykresy/minimalIceRange.png')
 
 ```
-Rysowanie pojedynczych poligonów w nieco niepoprawnje postaci - bez uwzględnienia tego, że dane to współrzedne biegunowe
+
+
+
 ```{r}
+# przygotowanie zmiennej reprezentującej czas z uwzględnieniem tego, że w pewnym momencie dane są co jeden, a nie dwa dni
+TimeSeq_1 <- seq(1,3180, 2)
+TimeSeq_2 <- seq(3180, length(angle)+1590-1, 1)
+TimeSeq <- c(TimeSeq_1, TimeSeq_2)
 
-
-library(sp)
-x_coord <- c(0:360)
-y_coord <-as.numeric(abs(daily_ice_edge_df[59,]))
-xym <- cbind(x_coord, y_coord)
-
-
-p = Polygon(xym)
-ps = Polygons(list(p),1)
-sps = SpatialPolygons(list(ps))
-plot(sps)
-# wszytskie pola danych
-sps
-# wartość pola area
-sps@polygons[[1]]@area
-
-```
-
-Próba szukania najmniejszej powierzchni poprzez obliczanie powierzchni poligonów powstałych z danych
-```{r}
-
-# teoretycznie szuka najmniejszej powierzchni
-findMinimal <- function(i) {
-  row <- as.numeric(daily_ice_edge_df[i,])
-
-  x_coord <- c(0:360)
-  y_coord <-as.numeric(row)
-  xym <- cbind(x_coord, y_coord)
+findModel <- function(long) {
   
-  
-  p = Polygon(xym)
-  ps = Polygons(list(p),1)
-  sps = SpatialPolygons(list(ps))
-  #plot(sps)
-  #area
-  area<-sps@polygons[[1]]@area
-  
-  return(area)
+  angle <- daily_ice_edge[,long+1]
+  # 2*pi*t/T
+  xc<-cos(2*pi*TimeSeq/366)
+  xs<-sin(2*pi*TimeSeq/366)
+  fit <- lm(angle~xc+xs)
 
-}
+  #plot(TimeSeq,angle, xlim=c(1, 9000))
+  #lines(TimeSeq,predict(fit), col="red")
 
-minimalArea <- 9999999
-for (i in 1:100) {
-  print(i)
-
-  nextMinimalArea <- findMinimal(i)
-  print(nextMinimalArea)
-  if(nextMinimalArea < minimalArea) {
-    minimalArea <- nextMinimalArea
-  }
+  result <- predict(fit)
+  return(result)
   
 }
 
-print(minimalArea)
-
+# dopisanie modeli do dataFrame
+models <- matrix(ncol=361, nrow=9530)
+for (i in c(0:361)) {
+  models[,i] <- findModel(i)
+}
+# zmiana nazw kolumn na takie reprezentujące kąty od 0 do 360
+models <- data.frame(models)
+colnames(models) <- c(0:360)
 
 ```
+
+Rysowanie wymodelwoanego zasięgu
+Mimo, że wartości w models dla każdej kolumny są inee to wykresy są prawie identyczne.
+Chyba po prostu źle do tego podszedłem xd
+```{r}
+for (i in c(1:10)) {
+  plotIce(i, models)
+}
+
+```
+
+
+
+
+
+
 
 
 
